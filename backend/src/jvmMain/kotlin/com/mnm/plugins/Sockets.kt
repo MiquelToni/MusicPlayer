@@ -7,7 +7,7 @@ import java.time.Duration
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-val playerState = PlayerState()
+//val playerState = PlayerState()
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -29,7 +29,7 @@ fun Application.configureSockets() {
             }
 
             // emit player state
-            send(playerState)
+//            send(playerState)
         }
     }
 }
