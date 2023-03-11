@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.mnm.common.models.HelloWorld
 
 @Composable
 fun App() {
@@ -14,7 +15,7 @@ fun App() {
     val platformName = getPlatformName()
 
     Button(onClick = {
-        text = "Hello, ${platformName}"
+        text = "Hello, ${platformName} ${HelloWorld().hi()}"
     }) {
         Text(text)
     }
