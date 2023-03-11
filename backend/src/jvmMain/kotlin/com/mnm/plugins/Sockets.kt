@@ -1,5 +1,6 @@
 package com.mnm.plugins
 
+import com.mnm.common.models.Routes
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import java.time.Duration
@@ -24,6 +25,17 @@ fun Application.configureSockets() {
                     }
                 }
             }
+        }
+        webSocket(Routes.api.playlist) {
+            for (frame in incoming) {
+                if (frame is Frame.Text) {
+                    val text = frame.readText()
+                    // read commands
+                    // do command
+                }
+            }
+
+            // emit player state
         }
     }
 }
