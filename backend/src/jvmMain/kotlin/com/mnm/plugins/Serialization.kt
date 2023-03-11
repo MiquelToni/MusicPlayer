@@ -10,20 +10,4 @@ fun Application.configureSerialization() {
     install(ContentNegotiation) {
         json()
     }
-    routing {
-        get("/json/kotlinx-serialization") {
-                call.respond(mapOf("hello" to "world"))
-            }
-
-        route("/api") {
-            get("/song/{songName}") {
-                val songName = call.parameters["songName"]
-                // send song
-            }
-            post("/playlist") {
-                // accept multipart
-                // save BLOB as file
-            }
-        }
-    }
 }
