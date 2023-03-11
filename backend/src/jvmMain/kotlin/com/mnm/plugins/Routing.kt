@@ -1,6 +1,5 @@
 package com.mnm.plugins
 
-import com.mnm.common.models.HelloWorld
 import com.mnm.common.models.Routes
 import io.ktor.server.routing.*
 import io.ktor.server.response.*
@@ -12,7 +11,7 @@ fun Application.configureRouting() {
             call.respondText("Hello World!")
         }
         get("/hola") {
-            call.respondText(HelloWorld().hi())
+            call.respondText("hola")
         }
         get(Routes.api.getSong) {
             val songName = call.parameters["songName"]

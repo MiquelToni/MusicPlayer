@@ -1,5 +1,9 @@
 import org.jetbrains.compose.compose
 
+object Versions {
+    const val serializationVersion = "1.8.10"
+}
+
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
@@ -9,6 +13,10 @@ plugins {
 
 group = "com.mnm"
 version = "1.0-SNAPSHOT"
+
+
+val ktorClient = "2.2.3"
+
 
 kotlin {
     android()
@@ -23,6 +31,14 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.material)
+
+                // JSON
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+                implementation("io.ktor:ktor-client-content-negotiation:$ktorClient")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorClient")
+
+                implementation("io.ktor:ktor-client-core:$ktorClient")
+                implementation("io.ktor:ktor-client-cio:$ktorClient")
             }
         }
         val commonTest by getting {

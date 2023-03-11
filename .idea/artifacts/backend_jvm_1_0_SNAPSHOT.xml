@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="backend-jvm-1.0-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/backend/build/libs</output-path>
-    <root id="archive" name="backend-jvm-1.0-SNAPSHOT.jar">
-      <element id="module-output" name="MusicPlayer.backend.jvmMain" />
-    </root>
-  </artifact>
-</component>
