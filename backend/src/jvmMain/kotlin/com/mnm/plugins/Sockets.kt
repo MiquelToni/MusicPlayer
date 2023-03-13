@@ -17,8 +17,8 @@ import kotlinx.coroutines.delay
 
 var playerState = PlayerState(emptyList(), null, PlayingState.STOP, 0)
 
-val commandStop = com.mnm.common.models.Command.Stop()
-val commandPlay = com.mnm.common.models.Command.Play(payload = com.mnm.common.models.PlayPayload(at = 15))
+val commandStop = Command.Stop()
+val commandPlay = Command.Play(payload = com.mnm.common.models.PlayPayload(at = 15))
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -31,11 +31,10 @@ fun Application.configureSockets() {
     routing {
         webSocket(Routes.api.playlist) {
             launch {
+                var cpt =0L
                 while(true) {
-                    delay(1000)
-                    sendSerialized(commandStop)
-                    delay(1000)
-                    sendSerialized(commandPlay)
+                    delay(500)
+                    sendSerialized(playerState.copy(emittedAt = cpt++))
                 }
             }
             for (frame in incoming) {
