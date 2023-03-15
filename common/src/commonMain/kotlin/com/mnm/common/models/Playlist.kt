@@ -6,9 +6,6 @@ import kotlinx.serialization.Serializable
 enum class PlayingState { PLAYING, STOP; }
 
 @Serializable
-enum class CommandAction { PLAY, STOP; }
-
-@Serializable
 data class Song(
     val fileName: String,
     val src: String,
@@ -24,13 +21,8 @@ data class PlayerState(
 )
 
 @Serializable
-sealed class Command(val action: CommandAction) {
-    @Serializable
-    class Stop : Command(action = CommandAction.STOP)
-
-    @Serializable
-    class Play(val payload: PlayPayload) : Command(action = CommandAction.PLAY)
-}
-
+sealed class Command()
 @Serializable
-data class PlayPayload(val at: Int);
+data class PlayCommand(val at: Int): Command()
+@Serializable
+object StopCommand : Command()

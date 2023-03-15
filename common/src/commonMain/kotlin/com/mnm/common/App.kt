@@ -5,7 +5,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.Button
 import androidx.compose.runtime.*
 import com.mnm.common.models.Command
-import com.mnm.common.models.PlayerState
 import com.mnm.common.models.PlayingState
 import com.mnm.common.models.Routes
 import com.mnm.common.networking.*
@@ -14,11 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-
 @Composable
 fun App() {
     var text by remember { mutableStateOf("Hello, World!") }
-    var playerState by remember { mutableStateOf<PlayerState?>(null) }
     var command by remember { mutableStateOf<Command?>(null) }
 
     val platformName = getPlatformName()
@@ -28,14 +25,20 @@ fun App() {
         Http.webSocket(Routes.api.playlist) {
             launch { stateFlow.collectLatest { sendSerialized(it) } }
             while(true) {
-                playerState = receiveDeserialized<PlayerState>()
+                try {
+                    command = receiveDeserialized<Command>()
+                    println(command)
+                }
+                catch(e: Exception) {
+                    println(e)
+                }
             }
         }
     }
 
     Column {
 
-        Text(playerState.toString())
+        Text(command.toString())
         Button(onClick = {
             stateFlow.value = if(stateFlow.value == PlayingState.PLAYING) PlayingState.STOP else PlayingState.PLAYING
         }) {

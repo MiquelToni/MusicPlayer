@@ -1,5 +1,6 @@
 package com.mnm.common.networking
 
+import com.mnm.common.models.*
 import com.mnm.common.HOSTNAME
 import com.mnm.common.HTTP
 import com.mnm.common.PORT
@@ -11,6 +12,18 @@ import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+
+val jsonSerializer = Json {
+    serializersModule = SerializersModule {
+        polymorphic(Command::class) {
+            subclass(PlayCommand::class)
+            subclass(StopCommand::class)
+        }
+    }
+}
 
 object Http {
     fun getEndpoint(
@@ -20,9 +33,9 @@ object Http {
 
     private val client = HttpClient {
         install(WebSockets) {
-            contentConverter = KotlinxWebsocketSerializationConverter(Json)
+            contentConverter = KotlinxWebsocketSerializationConverter(jsonSerializer)
         }
-        install(ContentNegotiation) { json() }
+        install(ContentNegotiation) { json(jsonSerializer) }
     }
 
     suspend fun webSocket(
@@ -31,7 +44,8 @@ object Http {
         block: suspend DefaultClientWebSocketSession.() -> Unit
     ) {
         val url = getEndpoint(endpoint, schema = WS)
-        client.webSocket(urlString=url, request=request, block=block)
+        client.webSocket(urlString = url, request = request, block = block)
     }
 }
-private fun portAsString() = if(PORT != null) ":$PORT" else ""
+
+private fun portAsString() = if (PORT != null) ":$PORT" else ""
