@@ -4,29 +4,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
 import androidx.compose.material.Button
 import androidx.compose.runtime.*
-import com.mnm.common.models.PlayerState
+import com.mnm.common.models.Command
+import com.mnm.common.models.PlayCommand
 import com.mnm.common.models.PlayingState
 import com.mnm.common.models.Routes
 import com.mnm.common.networking.client
+import com.mnm.common.networking.jsonSerializer
 import io.ktor.client.plugins.websocket.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.websocket.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
-const val HOST = "827d-85-58-29-37.eu.ngrok.io"
-const val HTTP = "https://$HOST"
-const val WS = "wss://$HOST"
+const val HOST = "localhost:8080"
+const val HTTP = "http://$HOST"
+const val WS = "ws://$HOST"
 
 @Composable
 fun App() {
     var text by remember { mutableStateOf("Hello, World!") }
-    var playerState by remember { mutableStateOf<PlayerState?>(null) }
+    var command by remember { mutableStateOf<Command?>(null) }
 
     val platformName = getPlatformName()
     val stateFlow = remember { MutableStateFlow(PlayingState.PLAYING) }
@@ -35,14 +33,20 @@ fun App() {
         client.webSocket("$WS${Routes.api.playlist}") {
             launch { stateFlow.collectLatest { sendSerialized(it) } }
             while(true) {
-                playerState = receiveDeserialized<PlayerState>()
+                try {
+                    command = receiveDeserialized<Command>()
+                    println(command)
+                }
+                catch(e: Exception) {
+                    println(e)
+                }
             }
         }
     }
 
     Column {
 
-        Text(playerState.toString())
+        Text(command.toString())
         Button(onClick = {
             stateFlow.value = if(stateFlow.value == PlayingState.PLAYING) PlayingState.STOP else PlayingState.PLAYING
         }) {
