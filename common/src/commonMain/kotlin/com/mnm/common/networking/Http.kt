@@ -1,10 +1,10 @@
 package com.mnm.common.networking
 
-import com.mnm.common.models.*
 import com.mnm.common.HOSTNAME
 import com.mnm.common.HTTP
 import com.mnm.common.PORT
 import com.mnm.common.WS
+import com.mnm.common.models.*
 import io.ktor.client.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
@@ -19,8 +19,11 @@ import kotlinx.serialization.modules.subclass
 val jsonSerializer = Json {
     serializersModule = SerializersModule {
         polymorphic(Command::class) {
-            subclass(PlayCommand::class)
-            subclass(StopCommand::class)
+            subclass(PrepareSong::class)
+            subclass(SeekTo::class)
+            subclass(Pause::class)
+            subclass(Play::class)
+            subclass(Stop::class)
         }
     }
 }
