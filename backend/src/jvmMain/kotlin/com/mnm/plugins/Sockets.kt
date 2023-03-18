@@ -49,7 +49,7 @@ fun Application.configureSockets() {
                 try {
                     val newPlayerState: PlayerState? = when (val command = receiveDeserialized<Command>()) {
                         is PrepareSong -> playerStateFlow.value.copy(
-                            state = if (command.autoplay) PlayingState.READY else PlayingState.PLAYING,
+                            state = if (command.autoplay) PlayingState.PLAYING else PlayingState.READY,
                             playingSongAt = command.songAtPlaylistIndex,
                             currentTime = command.initialSeek,
                             emittedAt = System.currentTimeMillis()
@@ -88,6 +88,7 @@ fun Application.configureSockets() {
                         }
 
                         is Previous -> playerStateFlow.value.playingSongAt?.let {
+                            println(it)
                             playerStateFlow.value.copy(
                                 playingSongAt = (it + playerStateFlow.value.playlist.count() - 1) % playerStateFlow.value.playlist.count(),
                                 emittedAt = System.currentTimeMillis()
