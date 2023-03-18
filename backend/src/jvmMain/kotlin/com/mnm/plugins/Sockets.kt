@@ -10,11 +10,14 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
 import io.ktor.serialization.kotlinx.*
 import kotlinx.coroutines.delay
+import java.io.File
 
-var playerState = PlayerState(emptyList(), null, PlayingState.STOP, 0)
-
-val commandStop = StopCommand
-val commandPlay = PlayCommand(at = 15)
+var playerState = PlayerState(
+    playlist = emptyList(),
+    playingSongAt = null,
+    state = PlayingState.STOP,
+    emittedAt = 0,
+)
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -27,11 +30,22 @@ fun Application.configureSockets() {
     routing {
         webSocket(Routes.api.playlist) {
             launch {
-                while(true) {
-                    sendSerialized<Command>(commandStop)
-                    delay(1000)
-                    println(commandPlay)
-                    sendSerialized<Command>(commandPlay)
+                while (true) {
+                    val playlist = File(musicPath)
+                        .walk()
+                        .filter { it.extension == "mp3" }
+                        .map {
+                            Song(
+                                fileName = it.name,
+                                src = "",
+                                durationMS = 3000L
+                            )
+                        }
+                        .toList()
+
+                    playerState = playerState.copy(playlist = playlist)
+
+                    sendSerialized(playerState)
                     delay(1000)
                 }
             }

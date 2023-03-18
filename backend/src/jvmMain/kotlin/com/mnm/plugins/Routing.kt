@@ -2,11 +2,15 @@ package com.mnm.plugins
 
 import com.mnm.common.models.Routes
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.utils.io.streams.*
 import java.io.File
 
+const val musicPath = "backend/src/jvmMain/resources/"
 fun Application.configureRouting() {
     routing {
         get("/") {
@@ -23,7 +27,7 @@ fun Application.configureRouting() {
                 return@get
             }
 
-            val filesThatMatchSongName = File("backend/src/jvmMain/resources")
+            val filesThatMatchSongName = File(musicPath)
                 .walk()
                 .filter { it.nameWithoutExtension == songName && it.extension == "mp3" }
 
@@ -43,8 +47,28 @@ fun Application.configureRouting() {
             call.respondFile(file)
         }
         post(Routes.api.postNewSong) {
-            // accept multipart
-            // save BLOB as file
+            val statusCode = call.receiveMultipart()
+                .readAllParts()
+                .find {
+                    it.name == "file"
+                }
+                ?.let {
+                    if(it is PartData.FileItem) {
+                        it.streamProvider().use { inputStream ->
+                            val file = File("$musicPath${it.originalFileName}")
+                            file.outputStream().buffered().use { outputStream ->
+                                inputStream.copyTo(outputStream)
+                            }
+                        }
+                        it.dispose()
+
+                        HttpStatusCode.OK
+                    }
+                    else null
+                }
+                ?: HttpStatusCode.BadRequest
+
+            call.response.status(statusCode)
         }
     }
 }
