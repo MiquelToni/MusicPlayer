@@ -47,35 +47,56 @@ fun Application.configureSockets() {
 
             while (true) {
                 try {
-                    val newPlayerState = when (val command = receiveDeserialized<Command>()) {
-                        is PrepareSong ->
-                            playerStateFlow.value.copy(
-                                state = if (command.autoplay == true) PlayingState.READY else PlayingState.PLAYING,
-                                playingSongAt = playerStateFlow.value.playlist.map { it.fileName }
-                                    .indexOf(command.songName),
-                                currentTime = 0,
+                    val newPlayerState: PlayerState? = when (val command = receiveDeserialized<Command>()) {
+                        is PrepareSong -> playerStateFlow.value.copy(
+                            state = if (command.autoplay) PlayingState.READY else PlayingState.PLAYING,
+                            playingSongAt = command.songAtPlaylistIndex,
+                            currentTime = command.initialSeek,
+                            emittedAt = System.currentTimeMillis()
+                        )
+
+                        is Play -> playerStateFlow.value.let {
+                            if (it.state in listOf(PlayingState.PAUSED, PlayingState.READY)) it.copy(
+                                state = PlayingState.PLAYING, emittedAt = System.currentTimeMillis()
+                            )
+                            else null
+                        }
+
+                        is Pause -> playerStateFlow.value.let {
+                            if (it.state == PlayingState.PLAYING) it.copy(
+                                state = PlayingState.PAUSED,
+                                currentTime = command.currentTime,
                                 emittedAt = System.currentTimeMillis()
                             )
+                            else null
+                        }
 
-                        is Play -> playerStateFlow.value.copy(
-                            state = PlayingState.PLAYING,
-                            emittedAt = System.currentTimeMillis()
-                        )
-
-                        is Pause -> playerStateFlow.value.copy(
-                            state = PlayingState.PAUSED,
-                            currentTime = command.currentTime,
-                            emittedAt = System.currentTimeMillis()
-                        )
-
-                        is SeekTo -> playerStateFlow.value.copy(
-                            currentTime = command.currentTime,
-                            emittedAt = System.currentTimeMillis()
-                        )
+                        is SeekTo -> playerStateFlow.value.let {
+                            if (it.state != PlayingState.IDLE) it.copy(
+                                currentTime = command.currentTime, emittedAt = System.currentTimeMillis()
+                            )
+                            else null
+                        }
 
                         is Stop -> idlePlayerState
+
+                        is Next -> playerStateFlow.value.playingSongAt?.let {
+                            playerStateFlow.value.copy(
+                                playingSongAt = (it + 1) % playerStateFlow.value.playlist.count(),
+                                emittedAt = System.currentTimeMillis()
+                            )
+                        }
+
+                        is Previous -> playerStateFlow.value.playingSongAt?.let {
+                            playerStateFlow.value.copy(
+                                playingSongAt = (it + playerStateFlow.value.playlist.count() - 1) % playerStateFlow.value.playlist.count(),
+                                emittedAt = System.currentTimeMillis()
+                            )
+                        }
                     }
-                    playerStateFlow.value = newPlayerState
+                    newPlayerState?.let {
+                        playerStateFlow.value = newPlayerState
+                    }
                 } catch (e: Exception) {
                     println("WebSocket error: '${e.message}'.")
                     send("Bad Request. Not a Command.")

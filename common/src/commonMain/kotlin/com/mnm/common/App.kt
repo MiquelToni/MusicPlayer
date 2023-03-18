@@ -38,9 +38,29 @@ fun App() {
 
         Text(playerState.toString())
         Button(onClick = {
-            stateFlow.value = if(playerState?.state == PlayingState.PLAYING) Stop else Play
+            stateFlow.value = Play
         }) {
-            Text(text)
+            Text("Play")
+        }
+        Button(onClick = {
+            stateFlow.value = Stop
+        }) {
+            Text("Stop")
+        }
+        Button(onClick = {
+            stateFlow.value = PrepareSong(songAtPlaylistIndex = 0)
+        }) {
+            Text("Prepare song")
+        }
+        Button(onClick = {
+            stateFlow.value = SeekTo(currentTime = 1000L)
+        }) {
+            Text("SeekTo")
+        }
+        Button(onClick = {
+            stateFlow.value = Pause(currentTime = 2000L)
+        }) {
+            Text("Pause")
         }
     }
 }

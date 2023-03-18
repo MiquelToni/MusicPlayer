@@ -15,7 +15,7 @@ data class Song(
 data class PlayerState(
     val playlist: List<Song>,
     val playingSongAt: Int?,
-    val currentTime: Int?, // seek
+    val currentTime: Long?, // seek
     val state: PlayingState,
     val emittedAt: Long,
 )
@@ -24,12 +24,16 @@ data class PlayerState(
 @Serializable
 sealed class Command()
 @Serializable
-data class PrepareSong(val songName: String, val autoplay: Boolean?, val initialSeek: Int?): Command()
+data class PrepareSong(val songAtPlaylistIndex: Int, val autoplay: Boolean = false, val initialSeek: Long = 0L): Command()
 @Serializable
-data class SeekTo(val currentTime: Int): Command()
+data class SeekTo(val currentTime: Long): Command()
 @Serializable
-data class Pause(val currentTime: Int) : Command()
+data class Pause(val currentTime: Long) : Command()
 @Serializable
 object Play : Command()
 @Serializable
 object Stop : Command()
+@Serializable
+object Next : Command()
+@Serializable
+object Previous : Command()

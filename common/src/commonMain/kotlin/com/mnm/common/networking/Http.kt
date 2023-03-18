@@ -24,6 +24,8 @@ val jsonSerializer = Json {
             subclass(Pause::class)
             subclass(Play::class)
             subclass(Stop::class)
+            subclass(Next::class)
+            subclass(Previous::class)
         }
     }
 }
