@@ -3,12 +3,11 @@ package com.mnm.common.models
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class PlayingState { PLAYING, STOP; }
+enum class PlayingState { IDLE, READY, PLAYING, PAUSED; }
 
 @Serializable
 data class Song(
     val fileName: String,
-    val src: String,
     val durationMS: Long
 )
 
@@ -16,13 +15,25 @@ data class Song(
 data class PlayerState(
     val playlist: List<Song>,
     val playingSongAt: Int?,
+    val currentTime: Long?, // seek
     val state: PlayingState,
     val emittedAt: Long,
 )
 
+// https://docs.tizen.org/application/native/api/mobile/5.0/capi_media_player_state_diagram.png
 @Serializable
 sealed class Command()
 @Serializable
-data class PlayCommand(val at: Int): Command()
+data class PrepareSong(val songAtPlaylistIndex: Int, val autoplay: Boolean = false, val initialSeek: Long = 0L): Command()
 @Serializable
-object StopCommand : Command()
+data class SeekTo(val currentTime: Long): Command()
+@Serializable
+data class Pause(val currentTime: Long) : Command()
+@Serializable
+object Play : Command()
+@Serializable
+object Stop : Command()
+@Serializable
+object Next : Command()
+@Serializable
+object Previous : Command()

@@ -24,8 +24,13 @@ import kotlinx.serialization.modules.subclass
 val jsonSerializer = Json {
     serializersModule = SerializersModule {
         polymorphic(Command::class) {
-            subclass(PlayCommand::class)
-            subclass(StopCommand::class)
+            subclass(PrepareSong::class)
+            subclass(SeekTo::class)
+            subclass(Pause::class)
+            subclass(Play::class)
+            subclass(Stop::class)
+            subclass(Next::class)
+            subclass(Previous::class)
         }
     }
 }
