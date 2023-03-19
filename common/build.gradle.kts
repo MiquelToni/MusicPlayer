@@ -31,6 +31,7 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.material)
+                api(compose.materialIconsExtended)
 
                 // JSON
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
