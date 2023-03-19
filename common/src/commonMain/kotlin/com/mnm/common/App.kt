@@ -1,117 +1,110 @@
 package com.mnm.common
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mnm.common.components.FileChooser
+import com.mnm.common.components.Playbar
 import com.mnm.common.models.*
 import com.mnm.common.networking.Http
-import io.ktor.client.plugins.websocket.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.isActive
+import com.mnm.common.state.playerStateFromServer
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-fun AddMusicButton(onClick: () -> Unit) = FloatingActionButton(onClick = onClick ) {
+fun AddMusicButton(onClick: () -> Unit) = FloatingActionButton(onClick = onClick) {
     Icon(
-        modifier=Modifier.offset(x=2.dp),
+        modifier = Modifier.offset(x = 2.dp),
         imageVector = Icons.Default.MusicNote,
-        contentDescription = null)
+        contentDescription = null
+    )
     Icon(
         modifier = Modifier
             .offset(
-                x=(-6).dp,
-                y=(-4).dp
+                x = (-6).dp,
+                y = (-4).dp
             )
             .size(14.dp),
         imageVector = Icons.Default.Add,
-        contentDescription = null)
+        contentDescription = null
+    )
+}
+
+@Composable
+fun TopBar(hasConnection: Boolean) = Row(
+    modifier=Modifier
+        .fillMaxWidth()
+        .padding(vertical=8.dp, horizontal = 16.dp),
+    horizontalArrangement = Arrangement.End
+) {
+    Box {
+        androidx.compose.animation.AnimatedVisibility(hasConnection) {
+            Icon(
+                tint = Color.Green,
+                imageVector = Icons.Default.Wifi,
+                contentDescription = null
+            )
+        }
+        androidx.compose.animation.AnimatedVisibility(!hasConnection) {
+            Icon(
+                tint = Color.Red,
+                imageVector = Icons.Default.WifiOff,
+                contentDescription = null
+            )
+        }
+    }
+
 }
 
 @Composable
 fun App() {
     val scope = rememberCoroutineScope()
+    var hasConnection by remember { mutableStateOf(false) }
+    val commands = remember { Channel<Command>(1) }
+    val playerState by playerStateFromServer(commands, onConnectionStateChanged = { hasConnection = it })
+    fun sendCommand(c: Command) = scope.launch { commands.send(c) }
+
     var isLoading by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     fun closeDialog() { showDialog = false }
+
     var selectedFile by remember { mutableStateOf<File?>(null) }
-    var playerState by remember { mutableStateOf<PlayerState?>(null) }
-    val stateFlow = remember { MutableStateFlow<Command>(Play) }
 
-    DisposableEffect(Unit) {
-        val job = scope.launch coroutine@{
-            Http.webSocket(Routes.api.playlist) {
-                launch { stateFlow.collectLatest { sendSerialized(it) } }
-                do {
-                    try {
-                        playerState = receiveDeserialized<PlayerState>()
-                        println(playerState)
-                    }
-                    catch(e: Exception) {
-                        println(e)
-                    }
-                } while(this@coroutine.isActive)
-            }
-        }
 
-        onDispose { job.cancel() }
-    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        floatingActionButton = {
-            AddMusicButton(
-                onClick= { showDialog=true })
-        }
+        topBar= { TopBar(hasConnection = hasConnection) },
+        floatingActionButton = { AddMusicButton(onClick = { showDialog = true }) }
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row {
-                Button(onClick = {
-                    stateFlow.value = Play
-                }) {
-                    Text("Play")
-                }
-                Button(onClick = {
-                    stateFlow.value = Stop
-                }) {
-                    Text("Stop")
-                }
-                Button(onClick = {
-                    stateFlow.value = PrepareSong(songAtPlaylistIndex = 0)
-                }) {
-                    Text("Prepare song")
-                }
-                Button(onClick = {
-                    stateFlow.value = SeekTo(currentTime = 1000L)
-                }) {
-                    Text("SeekTo")
-                }
-                Button(onClick = {
-                    stateFlow.value = Pause(currentTime = 2000L)
-                }) {
-                    Text("Pause")
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.size(200.dp).align(Alignment.Center)) {
+                AnimatedVisibility(isLoading) { CircularProgressIndicator(Modifier.fillMaxSize()) }
+                AnimatedVisibility(!isLoading) {
+                    Icon(
+                        tint = Color.Green,
+                        imageVector = Icons.Default.Check, contentDescription = null
+                    )
+                    Text(playerState.toString())
                 }
             }
-        }
-        if(isLoading) {
-            CircularProgressIndicator(Modifier.fillMaxSize())
-        } else {
-            Row {
-                Icon(
-                    tint = Color.Green,
-                    imageVector = Icons.Default.Check, contentDescription = null)
-                Text(playerState.toString())
+            if(playerState!=null) {
+                Playbar(
+                    state=playerState!!,
+                    onPreviousSong={ sendCommand(Previous)},
+                    onNextSong={ sendCommand(Next) },
+                    onPauseSong={ sendCommand(Stop) },
+                    onPlaySong={ sendCommand(Play)}
+                )
             }
+
         }
     }
     FileChooser(
@@ -121,11 +114,13 @@ fun App() {
             closeDialog()
         },
         onCancel = ::closeDialog,
-        onError = ::closeDialog)
+        onError = ::closeDialog
+    )
     LaunchedEffect(selectedFile) effect@{
         val file = selectedFile ?: return@effect
         isLoading = true
-        val res = kotlin.runCatching {  Http.uploadFile(file.name, file.readBytes()) }
+        runCatching { Http.uploadFile(file.name, file.readBytes()) }
         isLoading = false
+        selectedFile=null
     }
 }
