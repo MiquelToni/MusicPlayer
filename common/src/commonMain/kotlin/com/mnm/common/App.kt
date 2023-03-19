@@ -1,48 +1,81 @@
 package com.mnm.common
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Text
-import androidx.compose.material.Button
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.runtime.*
-import com.mnm.common.models.Command
-import com.mnm.common.models.PlayingState
-import com.mnm.common.models.Routes
-import com.mnm.common.networking.*
-import io.ktor.client.plugins.websocket.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.mnm.common.components.FileChooser
+import com.mnm.common.networking.Http
+import java.io.File
+
+
+
+@Composable
+fun AddMusicButton(
+    onClick: () -> Unit
+) = FloatingActionButton(
+    onClick = onClick,
+) {
+    Icon(
+        modifier=Modifier.offset(x=2.dp),
+        imageVector = Icons.Default.MusicNote,
+        contentDescription = null)
+    Icon(
+        modifier = Modifier
+            .offset(
+                x=(-6).dp,
+                y=(-4).dp
+            )
+            .size(14.dp),
+        imageVector = Icons.Default.Add,
+        contentDescription = null)
+}
 
 @Composable
 fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
-    var command by remember { mutableStateOf<Command?>(null) }
-
-    val platformName = getPlatformName()
-    val stateFlow = remember { MutableStateFlow(PlayingState.PLAYING) }
-
-    LaunchedEffect("") {
-        Http.webSocket(Routes.api.playlist) {
-            launch { stateFlow.collectLatest { sendSerialized(it) } }
-            while(true) {
-                try {
-                    command = receiveDeserialized<Command>()
-                    println(command)
-                }
-                catch(e: Exception) {
-                    println(e)
-                }
-            }
+    var isLoading by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedFile by remember { mutableStateOf<File?>(null) }
+    fun closeDialog() { showDialog = false }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            AddMusicButton(
+                onClick= { showDialog=true })
+        }
+    ) {
+        if(isLoading) {
+            CircularProgressIndicator(Modifier.fillMaxSize())
+        } else {
+            Icon(
+                tint = Color.Green,
+                imageVector = Icons.Default.Check, contentDescription = null)
         }
     }
-
-    Column {
-
-        Text(command.toString())
-        Button(onClick = {
-            stateFlow.value = if(stateFlow.value == PlayingState.PLAYING) PlayingState.STOP else PlayingState.PLAYING
-        }) {
-            Text(text)
-        }
+    FileChooser(
+        visible = showDialog,
+        onFile = {
+            selectedFile = it
+            closeDialog()
+        },
+        onCancel = ::closeDialog,
+        onError = ::closeDialog)
+    LaunchedEffect(selectedFile) effect@{
+        val file = selectedFile ?: return@effect
+        isLoading = true
+        val res = kotlin.runCatching {  Http.uploadFile(file.name, file.readBytes()) }
+        isLoading = false
     }
 }
