@@ -7,9 +7,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import androidx.compose.ui.zIndex
-import com.mnm.common.App
-import com.mnm.common.components.ProvideWindow
 import javax.swing.UIManager
 
 const val musicFolder = "/Users/miquel/Desktop/Music/"
