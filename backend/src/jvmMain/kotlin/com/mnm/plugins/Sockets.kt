@@ -1,5 +1,6 @@
 package com.mnm.plugins
 
+import com.mnm.application.MusicLibrary
 import com.mnm.common.models.*
 import com.mnm.common.networking.jsonSerializer
 import io.ktor.serialization.kotlinx.*
@@ -10,11 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.io.File
 import java.time.Duration
 
 val idlePlayerState = PlayerState(
-    playlist = generatePlaylist(),
+    playlist = MusicLibrary.generatePlaylist(),
     playingSongAt = null,
     currentTime = null,
     state = PlayingState.IDLE,
@@ -22,15 +22,6 @@ val idlePlayerState = PlayerState(
 )
 
 val playerStateFlow = MutableStateFlow(idlePlayerState)
-
-fun generatePlaylist() = getMusicLibrary().shuffled().take(100)
-
-fun getMusicLibrary() = File(musicPath).walk().filter { it.isFile && it.extension == "mp3" }.map {
-    Song(
-        fileName = it.name, durationMS = 3000L
-    )
-}.toList()
-
 
 fun PlayerState.computeNewState(command: Command) =
     when (command) {
@@ -69,9 +60,8 @@ fun PlayerState.computeNewState(command: Command) =
                 ?.let { currentSong -> (currentSong - 1 + playlist.size) % playlist.size }
                 ?.let { copy(playingSongAt = it) }
     }
-    ?.run { copy(emittedAt = System.currentTimeMillis()) }
-    ?:this
-
+        ?.run { copy(emittedAt = System.currentTimeMillis()) }
+        ?: this
 
 fun Application.configureSockets() {
     install(WebSockets) {

@@ -1,27 +1,21 @@
 package com.mnm.plugins
 
+import com.mnm.application.MusicLibrary
 import com.mnm.common.models.Routes
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.server.routing.*
-import io.ktor.server.response.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
-import io.ktor.utils.io.streams.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import java.io.File
 
 const val musicPath = "backend/src/jvmMain/resources/"
 fun Application.configureRouting() {
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-        get("/hola") {
-            call.respondText("hola")
-        }
         get(Routes.api.getSong) {
             val songName = call.parameters["songName"]
-            if(songName == null) {
+            if (songName == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 call.respondText("Missing path parameter :songName")
                 return@get
@@ -31,8 +25,7 @@ fun Application.configureRouting() {
                 .walk()
                 .filter { it.nameWithoutExtension == songName && it.extension == "mp3" }
 
-            if (filesThatMatchSongName.count() == 0)
-            {
+            if (filesThatMatchSongName.count() == 0) {
                 call.response.status(HttpStatusCode.NotFound)
                 call.respondText("Song '$songName' not found")
                 return@get
@@ -53,18 +46,18 @@ fun Application.configureRouting() {
                     it.name == "file"
                 }
                 ?.let {
-                    if(it is PartData.FileItem) {
+                    if (it is PartData.FileItem) {
                         it.streamProvider().use { inputStream ->
                             val file = File("$musicPath${it.originalFileName}")
                             file.outputStream().buffered().use { outputStream ->
                                 inputStream.copyTo(outputStream)
                             }
+                            MusicLibrary.addSong(file)
                         }
                         it.dispose()
 
                         HttpStatusCode.OK
-                    }
-                    else null
+                    } else null
                 }
                 ?: HttpStatusCode.BadRequest
 
