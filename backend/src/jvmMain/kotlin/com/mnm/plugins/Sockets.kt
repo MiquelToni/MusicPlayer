@@ -54,7 +54,7 @@ fun PlayerState.computeNewState(command: Command) =
 
         is SeekTo ->
             if (state != PlayingState.IDLE)
-                copy(currentTime = command.currentTime, emittedAt = System.currentTimeMillis())
+                copy(currentTime = command.currentTime)
             else
                 null
 
