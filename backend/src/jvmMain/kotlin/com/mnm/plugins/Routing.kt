@@ -61,7 +61,7 @@ fun Application.configureRouting() {
                             }
                         }
                         it.dispose()
-
+                        playerStateFlow.value = playerStateFlow.value.copy(playlist = generatePlaylist())
                         HttpStatusCode.OK
                     }
                     else null
