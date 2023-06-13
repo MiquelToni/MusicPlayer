@@ -1,6 +1,8 @@
 package com.mnm.common
 
+import SongController
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -11,9 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mnm.common.components.FileChooser
-import com.mnm.common.components.Playbar
+import com.mnm.common.components.MusicPlayer
 import com.mnm.common.models.*
-import com.mnm.common.networking.Http
 import com.mnm.common.state.playerStateFromServer
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -65,44 +66,38 @@ fun TopBar(hasConnection: Boolean) = Row(
 }
 
 @Composable
-fun App() {
+fun App(songName: String = "") {
     val scope = rememberCoroutineScope()
     var hasConnection by remember { mutableStateOf(false) }
     val commands = remember { Channel<Command>(1) }
     val playerState by playerStateFromServer(commands, onConnectionStateChanged = { hasConnection = it })
     fun sendCommand(c: Command) = scope.launch { commands.send(c) }
 
-    var isLoading by remember { mutableStateOf(false) }
+    var isUploadingFile by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     fun closeDialog() { showDialog = false }
 
     var selectedFile by remember { mutableStateOf<File?>(null) }
+    val controller by produceState<SongController?>(null) {
+        value = LocalSongLoader.loadSong(songName).also { it.player.play() }
+    }
 
+    val isLoading = controller == null
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar= { TopBar(hasConnection = hasConnection) },
         floatingActionButton = { AddMusicButton(onClick = { showDialog = true }) }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.size(200.dp).align(Alignment.Center)) {
-                AnimatedVisibility(isLoading) { CircularProgressIndicator(Modifier.fillMaxSize()) }
-                AnimatedVisibility(!isLoading) {
-                    Icon(
-                        tint = Color.Green,
-                        imageVector = Icons.Default.Check, contentDescription = null
-                    )
-                    Text(playerState.toString())
-                }
-            }
-            if(playerState!=null) {
-                Playbar(
-                    state=playerState!!,
-                    onPreviousSong={ sendCommand(Previous)},
-                    onNextSong={ sendCommand(Next) },
-                    onPauseSong={ sendCommand(Stop) },
-                    onPlaySong={ sendCommand(Play)}
-                )
+        Box(modifier = Modifier.background(Color.Black).fillMaxSize()) {
+            val c = controller
+            if(c != null) {
+                MusicPlayer(c)
+            } else {
+                CircularProgressIndicator(
+                    Modifier
+                        .size(32.dp)
+                        .align(Alignment.Center))
             }
 
         }
@@ -117,10 +112,11 @@ fun App() {
         onError = ::closeDialog
     )
     LaunchedEffect(selectedFile) effect@{
-        val file = selectedFile ?: return@effect
-        isLoading = true
-        runCatching { Http.uploadFile(file.name, file.readBytes()) }
-        isLoading = false
-        selectedFile=null
+        // reenable later
+//        val file = selectedFile ?: return@effect
+//        isUploadingFile = true
+//        runCatching { Http.uploadFile(file.name, file.readBytes()) }
+//        isUploadingFile = false
+//        selectedFile=null
     }
 }

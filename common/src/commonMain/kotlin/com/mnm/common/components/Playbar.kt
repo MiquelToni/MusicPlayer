@@ -41,13 +41,13 @@ fun PlaybarButton(
 
 @Composable
 fun BoxScope.Playbar(
-    state: PlayerState,
+    progress: Float,
     onPreviousSong: () -> Unit,
     onNextSong: () -> Unit,
     onPauseSong: () -> Unit,
     onPlaySong: () -> Unit,
 ) {
-    val isPlaying = state.state == PlayingState.PLAYING
+    val isPlaying = true
     val isNotPlaying = !isPlaying
     val spacerModifier = Modifier.size(16.dp)
 
@@ -59,7 +59,7 @@ fun BoxScope.Playbar(
     ) {
         Slider(
             modifier = Modifier.fillMaxWidth(),
-            value=.5f,
+            value=progress,
             onValueChange={}
         )
         Row(

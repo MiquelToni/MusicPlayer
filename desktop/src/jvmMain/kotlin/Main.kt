@@ -1,41 +1,45 @@
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.mnm.common.App
+import com.mnm.common.components.ProvideWindow
+import kotlinx.coroutines.delay
 import javax.swing.UIManager
 
+
 const val musicFolder = "/Users/miquel/Desktop/Music/"
+const val song = "Steff Da Campo & SMACK - Renegade (Official Music Video) [sFbkSuEGl0U].mp3"
+
+
+
+
+val price: Int get() = 2 * price
+
+
+
 fun main() = application {
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-    val player = MinimPlayer(musicFolder)
     Window(
         title = "Distributed music player",
         alwaysOnTop = true,
         onCloseRequest = ::exitApplication) {
 
-        val bands by
-            remember { player.start("1.wav")  }
-            .collectAsState(FloatArray(0))
-
-        Canvas(Modifier.fillMaxSize()) {
-            drawRect(Color.Black)
-            val width = 20
-            for ((index, band) in bands.withIndex()){
-                val xStart = index * width
-                val xEnd = xStart + width
-                drawRect(
-                    color = Color.Green,
-                    topLeft = Offset.Zero.copy(xStart.toFloat(), 0f),
-                    size = Size(20f, band)
-                )
-
-            }
-        }
-        // ProvideWindow { App() }
+        ProvideWindow { App("$musicFolder/$song") }
     }
 }

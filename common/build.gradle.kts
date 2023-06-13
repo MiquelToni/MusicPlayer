@@ -18,6 +18,11 @@ version = "1.0-SNAPSHOT"
 val ktorClient = "2.2.3"
 
 
+repositories {
+    // Include .jar files into the libs folder
+    flatDir { dirs("libs") }
+}
+
 kotlin {
     android()
     jvm("desktop") {
@@ -61,6 +66,14 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 api(compose.preview)
+
+                implementation("org.jaudiotagger:jaudiotagger:2.0.1")
+                implementation(":minim")
+                implementation(":jsminim")
+                implementation(":jl1.0.1")
+                implementation(":mp3spi1.9.5")
+                implementation(":tritonus_aos")
+                implementation(":tritonus_share")
             }
         }
         val desktopTest by getting

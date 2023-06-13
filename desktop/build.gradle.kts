@@ -2,6 +2,9 @@ import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+
+val kotlin_version = "1.8.10"
+
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
@@ -27,9 +30,8 @@ kotlin {
             dependencies {
                 implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
-                // implementation("javazoom:jlayer:1.0.1")
-                // implementation("uk.co.caprica:vlcj:4.7.1")
-                // implementation("com.github.wendykierp:JTransforms:3.1")
+
+                implementation("org.jaudiotagger:jaudiotagger:2.0.1")
                 implementation(":minim")
                 implementation(":jsminim")
                 implementation(":jl1.0.1")
